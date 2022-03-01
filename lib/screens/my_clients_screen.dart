@@ -8,6 +8,8 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:no_queues_manager/my_widgets/my_tile.dart';
 
 class MyClientsScreen extends StatefulWidget {
+  String managerId;
+  MyClientsScreen({this.managerId});
 
   @override
   _MyClientsScreenState createState() => _MyClientsScreenState();
@@ -19,6 +21,10 @@ class _MyClientsScreenState extends State<MyClientsScreen> {
   bool isLoading = false;
   FirebaseFirestore db = FirebaseFirestore.instance;
   FirebaseAuth auth = FirebaseAuth.instance;
+
+  String get id {
+    return widget.managerId != null ? widget.managerId : auth.currentUser.uid;
+  }
 
   void startLoading() {
     setState(() {
@@ -57,7 +63,7 @@ class _MyClientsScreenState extends State<MyClientsScreen> {
   Future<void> getClients() async {
     startLoading();
     try {
-      var subscriberDocs = await db.collection('manager_details').doc(auth.currentUser.uid).collection('subscribers').doc('summary').get();
+      var subscriberDocs = await db.collection('manager_details').doc(id).collection('subscribers').doc('summary').get();
       List subscriberList = subscriberDocs['subscribers'];
       setState(() {
         clients = subscriberList;

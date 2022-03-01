@@ -149,36 +149,40 @@ class _TerminalScreenState extends State<TerminalScreen> {
 
   Future<void> onTapCallback(String managerId) async{
     ///Declaring some boolean flags to hold the privileges of this terminal
-    bool canAddClientFlag = true;
-    bool canValidateClientFlag = false;
-    bool canSkipClientFlag = false;
-    bool canProceedToNextClientFlag = false;
+    bool addClientPermission = true;
+    bool validateClientPermission = false;
+    bool skipClientPermission = false;
+    bool nextPermission = false;
     bool serviceFound =false;
 
     ///get the terminal privileges from the my services list
     for (Map service in myServices) {
        if(service['service_id'] == '$managerId') {
          try {
-           canAddClientFlag = service['can_add_client_flag'];
-           canValidateClientFlag = service['can_add_client_flag'];
-           bool serviceFound = true;
-           break;
+           addClientPermission = service['add_client_permission'];
+           debugPrint('add client permission: $addClientPermission');
+           validateClientPermission = service['add_client_permission'];
+
+           ///service found flag is set to true iff 'addClientPermission' flag is not null
+           if(addClientPermission != null) serviceFound = true;
+
          }catch(e){
            debugPrint('$e');
            debugPrint('Could not extract the privilege flags from firebase');
+           serviceFound =false;
+           addClientPermission = true;
+           validateClientPermission = false;
+           skipClientPermission = false;
+           nextPermission = false;
          }
+         break;
        }
     }
 
+
     ///if service found, just proceed to the manager screen
     if(serviceFound == true) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => ManagerScr(canAddClient: canAddClientFlag, canValidateClient: canValidateClientFlag, managerId: managerId, canProceed) ));
-    }
-    var firstRecentToken = await AddUnregClient(managerId: managerId).addUnregClient(context, startLoading, stopLoading);
-    if (firstRecentToken != null) {
-      setState((){
-        recentToken = firstRecentToken;
-      });
+      Navigator.push(context, MaterialPageRoute(builder: (context) => ManagerScr(addClientPermission: addClientPermission, skipPermission: skipClientPermission, validateClientPermission: validateClientPermission, managerId: managerId, nextPermission: nextPermission) ));
     }
   }
 

@@ -50,7 +50,7 @@ class Dialogs {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      AutoSizeText('Account successfully created',
+                      AutoSizeText('Account successfully created', //todo: translate
                       maxLines: 1,
                       style: TextStyle(
                         color: Colors.green,
@@ -61,7 +61,7 @@ class Dialogs {
                       SizedBox(
                         height: 5
                       ),
-                      AutoSizeText('Your ${(!isTerminal) ? 'Service' : 'Terminal'} Code is',
+                      AutoSizeText('Your ${(!isTerminal) ? 'Service' : 'Terminal'} Code is', //todo: translate
                       maxLines: 1,
                       style: TextStyle(
                         color: Colors.black,
@@ -106,7 +106,7 @@ class Dialogs {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  AutoSizeText('Failed to create account',
+                  AutoSizeText('Failed to create account', //todo: translate
                       maxLines: 1,
                       style: TextStyle(
                         color: Colors.red,
@@ -128,7 +128,7 @@ class Dialogs {
                 onPressed: () {
                   Navigator.pop(context, true);
                 },
-                child: Text('Continue',
+                child: Text('Continue', //todo: translate
                     style: TextStyle(
                       color: Colors.blue,
                     )))
@@ -382,14 +382,25 @@ class Dialogs {
 
     ///if the appVersions match, exit: the app is up to date
     if(isLatestVersion == true) {
-      if(isSignedInAnonymously) await _auth.signOut();
+      if(isSignedInAnonymously) {
+        var user = _auth.currentUser;
+        //await _auth.signOut();
+        ///delete the anoymous account
+        await user.delete();
+      }
       return true;
     }
 
     ///if the appVersions don't match and the result of the comparaism is not null,
     ///show the alert dialog
     else if(isLatestVersion == false){
-      if(isSignedInAnonymously) await _auth.signOut();
+      if(isSignedInAnonymously) {
+        ///get an instance of the current user before signing out
+        var user = _auth.currentUser;
+        //await _auth.signOut();
+        ///delete the anonymous account
+        await user.delete();
+      }
       await showDialog(
           context: context,
           builder: (context) {
@@ -437,7 +448,12 @@ class Dialogs {
     ///return false if the result of the comparison is null
 
     else {
-      if(isSignedInAnonymously) await _auth.signOut();
+      if(isSignedInAnonymously) {
+        var user = _auth.currentUser;
+        //await _auth.signOut();
+        ///delete this user account
+        await user.delete();
+      }
       return false;
     }
   }

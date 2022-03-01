@@ -22,6 +22,7 @@ import 'package:no_queues_manager/screens/my_routes_screen.dart';
 import 'package:no_queues_manager/push_notification.dart';
 import 'package:no_queues_manager/screens/help_screen.dart';
 import 'package:no_queues_manager/screens/account_balance_screen.dart';
+import 'package:no_queues_manager/screens/reset_password_screen.dart';
 import 'package:upgrader/upgrader.dart';
 
 
@@ -101,7 +102,8 @@ class _MyAppState extends State<MyApp> {
             '/DashBoardScreen/MyRoutes' : (context) => MyRoutes(),
             '/DashBoardScreen/EditingScreen' : (context) => EditingScreen(),
             '/DashBoardScreen/HelpScreen' : (context) => HelpScreen(),
-            '/DashBoardScreen/AccountBalanceScreen' : (context) => AccountBalanceScreen()
+            '/DashBoardScreen/AccountBalanceScreen' : (context) => AccountBalanceScreen(),
+            '/ResetPasswordScreen' : (context) => ResetPasswordScreen()
 
           },
           initialRoute: '/',

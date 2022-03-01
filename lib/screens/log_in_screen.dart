@@ -45,6 +45,8 @@ final formKey = GlobalKey<FormState>();
       return AppLocalizations.of(context).requestValEmail;
     }else if (value.length < 8){
       return AppLocalizations.of(context).shortEmailMsg;
+    }else if(value.trim() == ""){
+      return "cannot contain empty spaces";
     }else if(noUserFoundForEmail) {
       return 'No user found for this email'; //todo: translate
   } else return null;
@@ -53,7 +55,10 @@ final formKey = GlobalKey<FormState>();
   String pwdValidation(var value) {
     if(value == null || value.isEmpty){
       return AppLocalizations.of(context).requestValPwd;
-    }else if(wrongPassword) {
+    }else if(value.trim() == ""){
+      return "cannot contain empty spaces";
+    }
+    else if(wrongPassword) {
       return 'Wrong password'; //todo: translate
     }
     else return null;
@@ -144,7 +149,7 @@ final formKey = GlobalKey<FormState>();
        debugPrint('---password: ${passwordController.text}');
        try {
          UserCredential user = await auth.signInWithEmailAndPassword(
-             email: emailController.text,
+             email: emailController.text.trim(),
              password: passwordController.text).timeout(Duration(seconds: 5));
 
          if(user != null && await isAManager()) {
@@ -182,7 +187,7 @@ final formKey = GlobalKey<FormState>();
     debugPrint('password: ${passwordController.text}');
     try {
       UserCredential user = await auth.signInWithEmailAndPassword(
-          email: emailController.text,
+          email: emailController.text.trim(),
           password: passwordController.text).timeout(Duration(seconds: 5));
 
       if(user != null && await isATerminal()) {
@@ -244,7 +249,18 @@ final formKey = GlobalKey<FormState>();
                     ),
                     MyTextField(controller: emailController, labelText: AppLocalizations.of(context).email, hintText: AppLocalizations.of(context).enterEmail, validator: emailValidation ,inputType: TextInputType.emailAddress,),
                     MyTextField(controller: passwordController, labelText: AppLocalizations.of(context).pwd, hintText: AppLocalizations.of(context).enterPwd, obscureText: true, validator: pwdValidation,),
-
+                    Center(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/ResetPasswordScreen');
+                        },
+                        child: AutoSizeText('Forgot password?',
+                            maxLines: 1,
+                            style: TextStyle(
+                              color: Colors.lightBlue,
+                            )),
+                      ),
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

@@ -66,6 +66,7 @@ class _DashBoardState extends State<DashBoard> {
   FirebaseAuth _auth = FirebaseAuth.instance;
   FirebaseFirestore _db = FirebaseFirestore.instance;
   bool isValidated = false;
+  bool isPreValidated = false; //used if and only if prevalidation is required
   bool isSkipButtonPressed = false;
   String currentClientToken = '';
   bool isCurrentClientRegistered = true;
@@ -421,6 +422,14 @@ class _DashBoardState extends State<DashBoard> {
         debugPrint('---------currentClientSkipCount: $currentClientSkipCount------');
         currentClientTimestamp = clientDoc['timestamp'];
         debugPrint('------currentClientTimestamp: $currentClientTimestamp------');
+
+        try { //todo: can remove this try and catch block after resetting the database
+          isPreValidated = clientDoc['is_pre_validated'];
+          debugPrint('-----pre validation state: $isPreValidated------');
+        }catch(e) {
+          debugPrint('$e');
+        }
+
         try { //todo: can remove this try and catch block after resetting the database
             isValidated = clientDoc['is_validated'];
           debugPrint('-----validation state: $isValidated------');
@@ -597,6 +606,7 @@ class _DashBoardState extends State<DashBoard> {
                               currentClientSkipCount = 0;
                               currentSampleCount = 0;
                               isValidated = false;
+                              isPreValidated = false;
                               isSkipButtonPressed = false;
                               isCurrentClientRegistered = true;
                               previousClientCount = 0;
@@ -798,12 +808,15 @@ class _DashBoardState extends State<DashBoard> {
                                     transaction.delete(subscriberReference);
 
                                     DocumentReference clientQueueDoc = _db.collection('client_details').doc(_currentClientId);
-                                    transaction.set(clientQueueDoc, {
-                                      'my_queues' : FieldValue.arrayRemove([{
-                                        'id' : _auth.currentUser.uid,
-                                        'name' : managerName,
-                                      }])
-                                    }, SetOptions(merge: true));
+                                    if(isCurrentClientRegistered) {
+                                      transaction.set(clientQueueDoc, {
+                                        'my_queues' : FieldValue.arrayRemove([{
+                                          'id' : _auth.currentUser.uid,
+                                          'name' : managerName,
+                                        }])
+                                      }, SetOptions(merge: true));
+                                    }
+
 
                                     DocumentReference subsSummaryDoc = _db.collection('manager_details').doc(FirebaseAuth.instance.currentUser.uid).collection('subscribers').doc('summary');
                                     transaction.set(subsSummaryDoc, {
@@ -1031,12 +1044,15 @@ class _DashBoardState extends State<DashBoard> {
                                     transaction.delete(subscriberReference);
 
                                     DocumentReference clientQueueDoc = _db.collection('client_details').doc(_currentClientId);
-                                    transaction.set(clientQueueDoc, {
-                                      'my_queues' : FieldValue.arrayRemove([{
-                                        'id' : _auth.currentUser.uid,
-                                        'name' : managerName,
-                                      }])
-                                    }, SetOptions(merge: true));
+                                    if(isCurrentClientRegistered) {
+                                      transaction.set(clientQueueDoc, { //todo: might have to change this to update in the future
+                                        'my_queues' : FieldValue.arrayRemove([{
+                                          'id' : _auth.currentUser.uid,
+                                          'name' : managerName,
+                                        }])
+                                      }, SetOptions(merge: true));
+                                    }
+
 
                                     DocumentReference subsSummaryDoc = _db.collection('manager_details').doc(FirebaseAuth.instance.currentUser.uid).collection('subscribers').doc('summary');
                                     transaction.set(subsSummaryDoc, {
@@ -1464,7 +1480,7 @@ class _DashBoardState extends State<DashBoard> {
                                                 child: Divider(thickness: 2,
                                                     color: Colors.red),
                                               ),
-                                              SizedBox(height: 20),
+                                              SizedBox(height: 10),
                                               Center(
                                                   child: Column(
                                                       mainAxisAlignment: MainAxisAlignment.center,
@@ -1474,7 +1490,6 @@ class _DashBoardState extends State<DashBoard> {
                                                         Text((currentClientName == null || currentClientName == '') ? (AppLocalizations.of(context).anonymous) :'${currentClientName.toUpperCase()}', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold,))
                                                       ]
                                                   )),
-
                                               SizedBox(height: 10),
                                               Center(
                                                   child: Column(
@@ -1483,6 +1498,18 @@ class _DashBoardState extends State<DashBoard> {
                                                         Text('Tel: ', style: TextStyle(color: Colors.blue)),
                                                         SizedBox(height: 5),
                                                         Text('${currentClientPhoneNumber.toUpperCase()}', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold,))
+                                                      ]
+                                                  )),
+                                              SizedBox(height: 10),
+                                              Center(
+                                                  child: Column(
+                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                      children: [
+                                                        Text('Pre-Validation Status: ', style: TextStyle(color: Colors.blue)), //todo: translate
+                                                        SizedBox(height: 5),
+                                                        isPreValidated ? Text('Pre-Validated', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold,))
+                                                            : Text('Not Pre-Validated', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold,))
+
                                                       ]
                                                   )),
                                             ],

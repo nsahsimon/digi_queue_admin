@@ -25,6 +25,12 @@ class _MyTerminalsScreenState extends State<MyTerminalsScreen> {
   List terminalIds = [];
   bool isLoading = false;
 
+  ///some useful permissions that may be granted when creating the terminal
+  bool addClientPermission = true;
+  bool validateClientPermission = false;
+  bool skipClientPermission = false;
+  bool nextPermission = false;
+
 
   @override
   void initState() {
@@ -66,6 +72,7 @@ class _MyTerminalsScreenState extends State<MyTerminalsScreen> {
     }
 
   }
+
   Future<String> getTerminalCodeDialog() async{
     String name;
     await showDialog(
@@ -73,7 +80,7 @@ class _MyTerminalsScreenState extends State<MyTerminalsScreen> {
         builder: (context) {
           return AlertDialog(
               content: Container(
-                  height: 100,
+                  height: 300,
                   color: Colors.white,
                   child: SingleChildScrollView(
                       child: Column(
@@ -87,6 +94,8 @@ class _MyTerminalsScreenState extends State<MyTerminalsScreen> {
                               ) ,
 
                             ),
+                            SizedBox(height: 10),
+                            selectTerminalPermissions(),
                             FlatButton(
                               color: appColor,
                               child: Text(
@@ -108,11 +117,79 @@ class _MyTerminalsScreenState extends State<MyTerminalsScreen> {
           );
         }
     );
-    return name.trim();
+    return name != null ? name.trim() : null;
   }
+
+  ///this widget allows the queue administrator to select the terminal's permissions, such as validation , skip ,next and add permissions
+  Widget selectTerminalPermissions() {
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return Container(
+          height: 200,
+            color: Colors.white,
+            child: Column(
+                children: [
+                  AutoSizeText('Select Permissions', maxLines: 1, style: TextStyle(fontWeight: FontWeight.bold)), //todo: translate
+                  Expanded(
+                    child: ListTile(
+                        title: AutoSizeText('Can Add Client', maxLines: 1), //todo: translate
+                        trailing: Checkbox(
+                            value: addClientPermission,
+                            onChanged: (bool newValue) {
+                              setState((){
+                                addClientPermission = newValue;
+                              });
+                            }
+                        )
+                    ),
+                  ),
+                  Expanded(
+                    child: ListTile(
+                        title: Text('Can validate Client', maxLines: 1), //todo: translate
+                        trailing: Checkbox(
+                            value: validateClientPermission,
+                            onChanged: (bool newValue) {
+                              setState((){
+                                validateClientPermission = newValue;
+                              });
+                            }
+                        )
+                    ),
+                  ),
+                  Expanded(
+                    child: ListTile(
+                        title: Text('Can Skip Client', maxLines: 1), //todo: translate
+                        trailing: Checkbox(
+                            value: skipClientPermission,
+                            onChanged: (bool newValue) {
+                              setState((){
+                                skipClientPermission = newValue;
+                              });
+                            }
+                        )
+                    ),
+                  ),
+                ]
+            )
+        );
+      }
+    );
+  }
+
 
   Future<void> addTerminal() async{
     String terminalCode = await getTerminalCodeDialog();
+    if(terminalCode == null) {
+      debugPrint('Terminal code field cannot be empty');
+      return;
+    }else if (terminalCode.trim() == ''){
+      debugPrint('Terminal code field cannot be empty');
+      return;
+    }else if( (addClientPermission == true) || (validateClientPermission == true)) {
+
+    }else {
+      return;
+    }
     String newTerminalId ;
     String newTerminalName ;
     List existingTerminalIds = [];
@@ -129,7 +206,7 @@ class _MyTerminalsScreenState extends State<MyTerminalsScreen> {
           var managerDoc = await transaction.get(managerDocRef);
           String managerName = managerDoc['name'];
 
-          //deleting the terminal at the level of the manager document
+          //adding the terminal at the level of the manager document
           transaction.set(managerDocRef, {
             'terminals' : FieldValue.arrayUnion([{
               'terminal_id' : newTerminalId,
@@ -140,12 +217,16 @@ class _MyTerminalsScreenState extends State<MyTerminalsScreen> {
 
           //getting manager details
 
-          //deleting the terminal at the level of the terminal's document
+          //adding the terminal at the level of the terminal's document
           var terminalDocRef = db.collection('terminal_details').doc('$newTerminalId');
           transaction.set(terminalDocRef, {
+            ///'services' is a list containing the details of all the services for which the current user is a terminal
+            ///Each service in the list contains a map which carrying info about the various properties of the
             'services' : FieldValue.arrayUnion([{
               'service_name' : managerName,
-              'service_id' : auth.currentUser.uid
+              'service_id' : auth.currentUser.uid,
+              'add_client_permission' : addClientPermission,
+              'validate_client_permission': validateClientPermission
             }])
           },
               SetOptions(merge: true));
@@ -175,6 +256,9 @@ class _MyTerminalsScreenState extends State<MyTerminalsScreen> {
             var managerDoc = await transaction.get(managerDocRef);
             String managerName = managerDoc['name'];
 
+            var terminalDocRef = db.collection('terminal_details').doc('$terminalId');
+            var terminalDocs = await transaction.get(terminalDocRef);
+
             //deleting the terminal at the level of the manager document
             transaction.set(managerDocRef, {
               'terminals' : FieldValue.arrayRemove([{
@@ -184,13 +268,17 @@ class _MyTerminalsScreenState extends State<MyTerminalsScreen> {
             },
             SetOptions(merge: true));
 
-            //deleting the terminal at the level of the terminal's document
-            var terminalDocRef = db.collection('terminal_details').doc('$terminalId');
+            ///deleting the terminal at the level of the terminal's document
+
+            List services = terminalDocs['services'];
+            var newServiceList = [];
+            for(var service in services) {
+              if (service['service_id'] != auth.currentUser.uid){
+                newServiceList.add(service);
+              }
+            }
             transaction.set(terminalDocRef, {
-              'services' : FieldValue.arrayRemove([{
-                'service_name' : managerName,
-                'service_id' : auth.currentUser.uid
-              }])
+              'services' : newServiceList
             },
                 SetOptions(merge: true));
           });
@@ -205,7 +293,6 @@ class _MyTerminalsScreenState extends State<MyTerminalsScreen> {
     }
     stopLoading();
   }
-
 
   @override
   Widget build(BuildContext context) {

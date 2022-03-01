@@ -161,7 +161,7 @@ class _HelpScreenState extends State<HelpScreen> {
                   stopLoading();
                 }),
             Text(
-                'Version: ${adminAppVersion}', //todo: translate,
+                ' Version: ${adminAppVersion} + ${adminAppBuildNum}', //todo: translate,
                 style: TextStyle(
                     color: Colors.black
                 )

@@ -190,6 +190,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
           });
      }
 
+     String descriptionValidation(var value) {
+    if (value.length > 100){
+      return 'Description is too long'; //todo: translate
+    } else return null;
+  }
+
      String emailValidation(var value) {
        if(value == null || value.isEmpty){
          return AppLocalizations.of(context).requestValEmail;
@@ -201,13 +207,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
        else return null;
         }
 
-        String descriptionValidation(var value) {
-       if (value.length > 100){
-      return 'Description is too long'; //todo: translate
-    } else return null;
-  }
-
-
      String pwdValidation(var value) {
        if(value == null || value.isEmpty){
          return AppLocalizations.of(context).requestValPwd;
@@ -215,6 +214,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
          return AppLocalizations.of(context).shortPwdMsg;
        } else if (weakPassword) {
          return 'weak password'; //todo: translate
+       }else if(value.contains(" ")) {
+         return "cannot contain spaces";
        }else if (passwordsDontMatch) {
          return 'passwords don\'t match'; //todo: translate
        }
@@ -405,10 +406,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
            DocumentReference docRef = FirebaseFirestore.instance.collection('manager_details').doc(id);
            transaction.set(docRef, {
-             'name' : nameController.text,
-             'email' : emailController.text,
-             'phone' : phoneController.text,
-             'location' : locationController.text,
+             'name' : nameController.text.trim(),
+             'email' : emailController.text.trim(),
+             'phone' : phoneController.text.trim(),
+             'location' : locationController.text.trim(),
              'opening_time' : formattedTime(selectedOpeningTime),
              'closing_time' : formattedTime(selectedClosingTime),
              'open' : true,
@@ -544,7 +545,7 @@ return result;
               ///try creating a account with a
               UserCredential userCredential = await FirebaseAuth.instance
                   .createUserWithEmailAndPassword(
-                  email: emailController.text,
+                  email: emailController.text.trim(),
                   password: passwordController.text
               ).timeout(Duration(seconds: 10));
 
@@ -602,7 +603,7 @@ return result;
         try {
           UserCredential userCredential = await FirebaseAuth.instance
               .createUserWithEmailAndPassword(
-              email: emailController.text,
+              email: emailController.text.trim(),
               password: passwordController.text
           ).timeout(Duration(seconds: 5));
 
