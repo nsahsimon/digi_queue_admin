@@ -1,9 +1,10 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 import 'package:no_queues_manager/models/messaging.dart';
+import 'sms_api_key.dart' as SmsKey;
 
 class SMSService {
-  String _apiKey = 'MWvOr9k1ubp7scgzTk0fZb98UOb6nR1VE5wDrt13pm97DHmLSKptDzDZlnzPZUIHZTQ=';
+  String _apiKey = SmsKey.apiKey;
   String _id;
   String get _sendUrl {
     return 'https://api.avlytext.com/v1/sms?api_key=$_apiKey';
